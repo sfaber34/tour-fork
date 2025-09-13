@@ -156,6 +156,7 @@ export default function Home() {
               <Marker left="67%" top="47.2%" label="Dhanbadh" sublabel="Indian Institute of Technology" />
               <Marker left="71%" top="54.8%" label="Singapore" />
               <Marker left="48.6%" top="38.3%" label="Lausanne" sublabel="Swiss Federal Technology Institute" />
+              <Marker left="46.5%" top="42.4%" label="Málaga" sublabel="University of Málaga" />
             </div>
             {/* Map legend */}
             <div className="flex flex-col items-center mt-3">
