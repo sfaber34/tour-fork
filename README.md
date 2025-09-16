@@ -78,3 +78,21 @@ To know more about its features, check out our [website](https://scaffoldeth.io)
 We welcome contributions to Scaffold-ETH 2!
 
 Please see [CONTRIBUTING.MD](https://github.com/scaffold-eth/scaffold-eth-2/blob/main/CONTRIBUTING.md) for more information and guidelines for contributing to Scaffold-ETH 2.
+
+## Event Card Rendering
+
+The "Next events:" event cards are rendered from the info in packages/nextjs/data/events.json
+
+Events will not be rendered if the card is for an event more than 2 days old
+
+Each event requires a date, title, location, and description:
+```
+[
+  {
+    "date": "09/29/2025",
+    "title": "A future event",
+    "location": "Location 2",
+    "description": "We'll show off SpeedRun Ethereum and dive into vibe coding onchain apps and the art of one-shotting."
+  }
+]
+```

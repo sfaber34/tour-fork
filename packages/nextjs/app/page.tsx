@@ -18,7 +18,7 @@ export default function Home() {
   const textColor = "text-[#392b18]";
 
   // Function to transform date from MM/DD/YYYY to "Month, Day" format
-  const transformDate = (dateStr: string) => {
+  const transformDate = (dateStr: string): string => {
     const monthNames = [
       "January",
       "February",
@@ -34,26 +34,50 @@ export default function Home() {
       "December",
     ];
 
-    // Handle date ranges like "05/27-29/2025"
+    // Handle date ranges
     const rangeParts = dateStr.split("-");
     if (rangeParts.length === 2) {
-      // Extract start date and end day
-      const startPart = rangeParts[0]; // "05/27"
-      const endDay = rangeParts[1].split("/")[0]; // "29"
+      const startPart = rangeParts[0]; // e.g., "05/27/2025" or "05/27"
+      const endPart = rangeParts[1]; // e.g., "29/2025", "10/05/2025", or "01/05/2026"
 
-      const [month, startDay] = startPart.split("/");
-      const monthIndex = parseInt(month) - 1;
-      const monthName = monthNames[monthIndex];
+      // Check if we have full dates (with slashes in both parts)
+      if (startPart.split("/").length === 3 && endPart.split("/").length === 3) {
+        // Format: "09/25/2025-10/05/2025", "12/25/2025-01/05/2026", or "09/28/2025-09/30/2025"
+        const [startMonth, startDay] = startPart.split("/");
+        const [endMonth, endDay] = endPart.split("/");
 
-      return `${monthName} ${parseInt(startDay)}-${parseInt(endDay)}`;
-    } else {
-      // Handle single dates like "6/7/2025"
-      const [month, day] = dateStr.split("/");
-      const monthIndex = parseInt(month) - 1;
-      const monthName = monthNames[monthIndex];
+        const startMonthName = monthNames[parseInt(startMonth) - 1];
+        const endMonthName = monthNames[parseInt(endMonth) - 1];
 
-      return `${monthName} ${parseInt(day)}`;
+        // Check if it's the same month
+        if (startMonth === endMonth) {
+          return `${startMonthName} ${parseInt(startDay)} - ${parseInt(endDay)}`;
+        } else {
+          return `${startMonthName} ${parseInt(startDay)} - ${endMonthName} ${parseInt(endDay)}`;
+        }
+      } else if (startPart.split("/").length === 3 && endPart.split("/").length === 1) {
+        // Format: "05/27-29/2025" (same month range)
+        const [month, startDay] = startPart.split("/");
+        const endDay = endPart;
+        const monthName = monthNames[parseInt(month) - 1];
+
+        return `${monthName} ${parseInt(startDay)} - ${parseInt(endDay)}`;
+      } else if (startPart.split("/").length === 2 && endPart.split("/").length === 2) {
+        // Format: "05/27-29/2025" but parsed differently
+        const [month, startDay] = startPart.split("/");
+        const endDay = endPart.split("/")[0];
+        const monthName = monthNames[parseInt(month) - 1];
+
+        return `${monthName} ${parseInt(startDay)} - ${parseInt(endDay)}`;
+      }
     }
+
+    // Handle single dates like "6/7/2025"
+    const [month, day] = dateStr.split("/");
+    const monthIndex = parseInt(month) - 1;
+    const monthName = monthNames[monthIndex];
+
+    return `${monthName} ${parseInt(day)}`;
   };
 
   // Function to get sortable date for comparison
@@ -63,8 +87,15 @@ export default function Home() {
     let sortableDateStr;
 
     if (rangeParts.length === 2) {
-      // For ranges like "05/27-29/2025", use the start date
-      sortableDateStr = rangeParts[0] + "/" + dateStr.split("/")[2]; // "05/27/2025"
+      const startPart = rangeParts[0];
+
+      if (startPart.split("/").length === 3) {
+        // For ranges like "09/25/2025-10/05/2025" or "05/27-29/2025", use the start date
+        sortableDateStr = startPart; // Already has full date
+      } else {
+        // For ranges like "05/27-29/2025", use the start date with year from end
+        sortableDateStr = rangeParts[0] + "/" + dateStr.split("/")[2]; // "05/27/2025"
+      }
     } else {
       // For single dates like "6/7/2025", use as is
       sortableDateStr = dateStr;
@@ -79,11 +110,13 @@ export default function Home() {
     let endDateStr;
 
     if (rangeParts.length === 2) {
-      // For ranges like "05/27-29/2025" or "09/01-11/2025", use the end date
-      const startPart = rangeParts[0]; // "05/27" or "09/01"
-      const endPart = rangeParts[1]; // "29/2025" or "11/2025"
+      const startPart = rangeParts[0]; // e.g., "05/27/2025" or "05/27"
+      const endPart = rangeParts[1]; // e.g., "29/2025", "10/05/2025", or "01/05/2026"
 
-      if (endPart.includes("/")) {
+      if (endPart.split("/").length === 3) {
+        // Format like "09/25/2025-10/05/2025" or "12/25/2025-01/05/2026"
+        endDateStr = endPart; // Already has full date
+      } else if (endPart.includes("/")) {
         // Format like "09/01-11/2025"
         endDateStr = startPart.split("/")[0] + "/" + endPart; // "09/11/2025"
       } else {
