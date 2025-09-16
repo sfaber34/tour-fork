@@ -4,10 +4,126 @@ import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import EventCard from "../components/EventCard";
 import Marker from "../components/Markers";
+import eventsData from "../data/events.json";
+
+type EventData = {
+  date: string;
+  title: string;
+  location: string;
+  description: string;
+};
 
 export default function Home() {
   const [scrollY, setScrollY] = useState(0);
   const textColor = "text-[#392b18]";
+
+  // Function to transform date from MM/DD/YYYY to "Month, Day" format
+  const transformDate = (dateStr: string) => {
+    const monthNames = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
+
+    // Handle date ranges like "05/27-29/2025"
+    const rangeParts = dateStr.split("-");
+    if (rangeParts.length === 2) {
+      // Extract start date and end day
+      const startPart = rangeParts[0]; // "05/27"
+      const endDay = rangeParts[1].split("/")[0]; // "29"
+
+      const [month, startDay] = startPart.split("/");
+      const monthIndex = parseInt(month) - 1;
+      const monthName = monthNames[monthIndex];
+
+      return `${monthName} ${parseInt(startDay)}-${parseInt(endDay)}`;
+    } else {
+      // Handle single dates like "6/7/2025"
+      const [month, day] = dateStr.split("/");
+      const monthIndex = parseInt(month) - 1;
+      const monthName = monthNames[monthIndex];
+
+      return `${monthName} ${parseInt(day)}`;
+    }
+  };
+
+  // Function to get sortable date for comparison
+  const getSortableDate = (dateStr: string) => {
+    // Extract the year and month/day from the original format
+    const rangeParts = dateStr.split("-");
+    let sortableDateStr;
+
+    if (rangeParts.length === 2) {
+      // For ranges like "05/27-29/2025", use the start date
+      sortableDateStr = rangeParts[0] + "/" + dateStr.split("/")[2]; // "05/27/2025"
+    } else {
+      // For single dates like "6/7/2025", use as is
+      sortableDateStr = dateStr;
+    }
+
+    return new Date(sortableDateStr);
+  };
+
+  // Function to get the end date for filtering (for ranges, use the later date)
+  const getEndDate = (dateStr: string) => {
+    const rangeParts = dateStr.split("-");
+    let endDateStr;
+
+    if (rangeParts.length === 2) {
+      // For ranges like "05/27-29/2025" or "09/01-11/2025", use the end date
+      const startPart = rangeParts[0]; // "05/27" or "09/01"
+      const endPart = rangeParts[1]; // "29/2025" or "11/2025"
+
+      if (endPart.includes("/")) {
+        // Format like "09/01-11/2025"
+        endDateStr = startPart.split("/")[0] + "/" + endPart; // "09/11/2025"
+      } else {
+        // Format like "05/27-29/2025"
+        const [month] = startPart.split("/");
+        const year = dateStr.split("/")[2];
+        endDateStr = `${month}/${endPart}/${year}`; // "05/29/2025"
+      }
+    } else {
+      // For single dates like "6/7/2025", use as is
+      endDateStr = dateStr;
+    }
+
+    return new Date(endDateStr);
+  };
+
+  // Function to check if event should be displayed (future events or less than 2 days old)
+  const shouldDisplayEvent = (dateStr: string) => {
+    const eventEndDate = getEndDate(dateStr);
+    const currentDate = new Date();
+
+    // Set current date to start of day for comparison
+    currentDate.setHours(0, 0, 0, 0);
+
+    // Calculate the cutoff date (2 days ago)
+    const cutoffDate = new Date(currentDate);
+    cutoffDate.setDate(currentDate.getDate() - 2);
+
+    // Event should be displayed if its end date is after the cutoff
+    return eventEndDate >= cutoffDate;
+  };
+
+  // Sort, filter and transform events
+  const processedEvents = (eventsData as EventData[])
+    .filter(event => shouldDisplayEvent(event.date))
+    .sort((a, b) => getSortableDate(a.date).getTime() - getSortableDate(b.date).getTime())
+    .map(event => ({
+      ...event,
+      date: transformDate(event.date),
+    }));
 
   const scrollToMap = useCallback(() => {
     document.getElementById("map-section")?.scrollIntoView({ behavior: "smooth" });
@@ -156,7 +272,6 @@ export default function Home() {
               <Marker left="67%" top="47.2%" label="Dhanbadh" sublabel="Indian Institute of Technology" />
               <Marker left="71%" top="54.8%" label="Singapore" />
               <Marker left="48.6%" top="38.3%" label="Lausanne" sublabel="Swiss Federal Technology Institute" />
-              <Marker left="46.5%" top="42.4%" label="Málaga" sublabel="University of Málaga" />
             </div>
             {/* Map legend */}
             <div className="flex flex-col items-center mt-3">
@@ -173,6 +288,24 @@ export default function Home() {
             </div>
           </div>
         </div>
+
+        {/* Dynamic Events Section */}
+        {processedEvents.length > 0 && (
+          <div id="events-section" className="container mx-auto px-6 py-12 mb-16 flex flex-col items-center">
+            <h2 className={`text-4xl font-bold mb-12 ${textColor}`}>Next events:</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {processedEvents.map((event, index) => (
+                <EventCard
+                  key={index}
+                  date={event.date}
+                  title={event.title}
+                  location={event.location}
+                  description={event.description}
+                />
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Events Section */}
         {/* <div id="events-section" className="container mx-auto px-6 py-12 mb-16 flex flex-col items-center">

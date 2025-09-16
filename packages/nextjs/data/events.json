@@ -1,0 +1,20 @@
+[
+  {
+    "date": "09/11/2025",
+    "title": "A past event",
+    "location": "Location 1",
+    "description": "We'll show off SpeedRun Ethereum and dive into vibe coding onchain apps and the art of one-shotting."
+  },
+  {
+    "date": "09/20/2025",
+    "title": "A future event",
+    "location": "Location 2",
+    "description": "We'll show off SpeedRun Ethereum and dive into vibe coding onchain apps and the art of one-shotting."
+  },
+  {
+    "date": "09/20-25/2025",
+    "title": "A future event with a range of days",
+    "location": "Location 3",
+    "description": "We'll show off SpeedRun Ethereum and dive into vibe coding onchain apps and the art of one-shotting."
+  }
+]
