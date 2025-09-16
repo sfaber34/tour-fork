@@ -81,7 +81,7 @@ Please see [CONTRIBUTING.MD](https://github.com/scaffold-eth/scaffold-eth-2/blob
 
 ## Event Card Rendering
 
-The "Next events:" event cards are rendered from the info in packages/nextjs/data/events.json
+The "Next events:" event cards are rendered from the info in packages/nextjs/public/events.json
 
 Events will not be rendered if the card is for an event more than 2 days old
 

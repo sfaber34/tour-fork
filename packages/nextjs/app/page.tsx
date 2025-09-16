@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import EventCard from "../components/EventCard";
 import Marker from "../components/Markers";
-import eventsData from "../data/events.json";
 
 type EventData = {
   date: string;
@@ -15,6 +14,8 @@ type EventData = {
 
 export default function Home() {
   const [scrollY, setScrollY] = useState(0);
+  const [eventsData, setEventsData] = useState<EventData[]>([]);
+  const [eventsLoaded, setEventsLoaded] = useState(false);
   const textColor = "text-[#392b18]";
 
   // Function to transform date from MM/DD/YYYY to "Month, Day" format
@@ -149,8 +150,31 @@ export default function Home() {
     return eventEndDate >= cutoffDate;
   };
 
+  // Load events data with error handling
+  useEffect(() => {
+    const loadEventsData = async () => {
+      try {
+        // Use dynamic import to catch JSON parsing errors
+        const response = await fetch("/events.json");
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setEventsData(data);
+        setEventsLoaded(true);
+      } catch (error) {
+        console.warn("Failed to load events data:", error);
+        // Set empty array as fallback
+        setEventsData([]);
+        setEventsLoaded(true);
+      }
+    };
+
+    loadEventsData();
+  }, []);
+
   // Sort, filter and transform events
-  const processedEvents = (eventsData as EventData[])
+  const processedEvents = eventsData
     .filter(event => shouldDisplayEvent(event.date))
     .sort((a, b) => getSortableDate(a.date).getTime() - getSortableDate(b.date).getTime())
     .map(event => ({
@@ -323,7 +347,7 @@ export default function Home() {
         </div>
 
         {/* Dynamic Events Section */}
-        {processedEvents.length > 0 && (
+        {eventsLoaded && processedEvents.length > 0 && (
           <div id="events-section" className="container mx-auto px-6 py-12 mb-16 flex flex-col items-center">
             <h2 className={`text-4xl font-bold mb-12 ${textColor}`}>Next events:</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
