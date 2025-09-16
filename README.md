@@ -85,7 +85,7 @@ The "Next events:" event cards are rendered from the info in packages/nextjs/pub
 
 Events will not be rendered if the card is for an event more than 2 days old
 
-Each event requires a date, title, location, and description:
+Each event requires a date, title, location, and description. Date format is MM/DD/YYYY:
 ```
 [
   {
@@ -96,3 +96,29 @@ Each event requires a date, title, location, and description:
   }
 ]
 ```
+
+It will handle a range of days like this:
+```
+[
+  {
+      "date": "09/28-29/2025",
+      "title": "A future event with a range of days",
+      "location": "Location 3",
+      "description": "We'll show off SpeedRun Ethereum and dive into vibe coding onchain apps and the art of one-shotting."
+  }
+]
+```
+
+And a date range that rolls into the next month (or year):
+```
+[
+  {
+    "date": "09/25/2025-10/15/2025",
+    "title": "A future event with a rollover into the next month",
+    "location": "Location 4",
+    "description": "We'll show off SpeedRun Ethereum and dive into vibe coding onchain apps and the art of one-shotting."
+  }
+]
+```
+
+
