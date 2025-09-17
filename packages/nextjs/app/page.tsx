@@ -4,182 +4,19 @@ import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import EventCard from "../components/EventCard";
 import Marker from "../components/Markers";
-
-type EventData = {
-  date: string;
-  title: string;
-  location: string;
-  description: string;
-};
+import { events, formatEventDate, getEventSortDate, shouldDisplayEvent } from "../events";
 
 export default function Home() {
   const [scrollY, setScrollY] = useState(0);
-  const [eventsData, setEventsData] = useState<EventData[]>([]);
-  const [eventsLoaded, setEventsLoaded] = useState(false);
   const textColor = "text-[#392b18]";
 
-  // Function to transform date from MM/DD/YYYY to "Month, Day" format
-  const transformDate = (dateStr: string): string => {
-    const monthNames = [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
-    ];
-
-    // Handle date ranges
-    const rangeParts = dateStr.split("-");
-    if (rangeParts.length === 2) {
-      const startPart = rangeParts[0]; // e.g., "05/27/2025" or "05/27"
-      const endPart = rangeParts[1]; // e.g., "29/2025", "10/05/2025", or "01/05/2026"
-
-      // Check if we have full dates (with slashes in both parts)
-      if (startPart.split("/").length === 3 && endPart.split("/").length === 3) {
-        // Format: "09/25/2025-10/05/2025", "12/25/2025-01/05/2026", or "09/28/2025-09/30/2025"
-        const [startMonth, startDay] = startPart.split("/");
-        const [endMonth, endDay] = endPart.split("/");
-
-        const startMonthName = monthNames[parseInt(startMonth) - 1];
-        const endMonthName = monthNames[parseInt(endMonth) - 1];
-
-        // Check if it's the same month
-        if (startMonth === endMonth) {
-          return `${startMonthName} ${parseInt(startDay)} - ${parseInt(endDay)}`;
-        } else {
-          return `${startMonthName} ${parseInt(startDay)} - ${endMonthName} ${parseInt(endDay)}`;
-        }
-      } else if (startPart.split("/").length === 3 && endPart.split("/").length === 1) {
-        // Format: "05/27-29/2025" (same month range)
-        const [month, startDay] = startPart.split("/");
-        const endDay = endPart;
-        const monthName = monthNames[parseInt(month) - 1];
-
-        return `${monthName} ${parseInt(startDay)} - ${parseInt(endDay)}`;
-      } else if (startPart.split("/").length === 2 && endPart.split("/").length === 2) {
-        // Format: "05/27-29/2025" but parsed differently
-        const [month, startDay] = startPart.split("/");
-        const endDay = endPart.split("/")[0];
-        const monthName = monthNames[parseInt(month) - 1];
-
-        return `${monthName} ${parseInt(startDay)} - ${parseInt(endDay)}`;
-      }
-    }
-
-    // Handle single dates like "6/7/2025"
-    const [month, day] = dateStr.split("/");
-    const monthIndex = parseInt(month) - 1;
-    const monthName = monthNames[monthIndex];
-
-    return `${monthName} ${parseInt(day)}`;
-  };
-
-  // Function to get sortable date for comparison
-  const getSortableDate = (dateStr: string) => {
-    // Extract the year and month/day from the original format
-    const rangeParts = dateStr.split("-");
-    let sortableDateStr;
-
-    if (rangeParts.length === 2) {
-      const startPart = rangeParts[0];
-
-      if (startPart.split("/").length === 3) {
-        // For ranges like "09/25/2025-10/05/2025" or "05/27-29/2025", use the start date
-        sortableDateStr = startPart; // Already has full date
-      } else {
-        // For ranges like "05/27-29/2025", use the start date with year from end
-        sortableDateStr = rangeParts[0] + "/" + dateStr.split("/")[2]; // "05/27/2025"
-      }
-    } else {
-      // For single dates like "6/7/2025", use as is
-      sortableDateStr = dateStr;
-    }
-
-    return new Date(sortableDateStr);
-  };
-
-  // Function to get the end date for filtering (for ranges, use the later date)
-  const getEndDate = (dateStr: string) => {
-    const rangeParts = dateStr.split("-");
-    let endDateStr;
-
-    if (rangeParts.length === 2) {
-      const startPart = rangeParts[0]; // e.g., "05/27/2025" or "05/27"
-      const endPart = rangeParts[1]; // e.g., "29/2025", "10/05/2025", or "01/05/2026"
-
-      if (endPart.split("/").length === 3) {
-        // Format like "09/25/2025-10/05/2025" or "12/25/2025-01/05/2026"
-        endDateStr = endPart; // Already has full date
-      } else if (endPart.includes("/")) {
-        // Format like "09/01-11/2025"
-        endDateStr = startPart.split("/")[0] + "/" + endPart; // "09/11/2025"
-      } else {
-        // Format like "05/27-29/2025"
-        const [month] = startPart.split("/");
-        const year = dateStr.split("/")[2];
-        endDateStr = `${month}/${endPart}/${year}`; // "05/29/2025"
-      }
-    } else {
-      // For single dates like "6/7/2025", use as is
-      endDateStr = dateStr;
-    }
-
-    return new Date(endDateStr);
-  };
-
-  // Function to check if event should be displayed (future events or less than 2 days old)
-  const shouldDisplayEvent = (dateStr: string) => {
-    const eventEndDate = getEndDate(dateStr);
-    const currentDate = new Date();
-
-    // Set current date to start of day for comparison
-    currentDate.setHours(0, 0, 0, 0);
-
-    // Calculate the cutoff date (2 days ago)
-    const cutoffDate = new Date(currentDate);
-    cutoffDate.setDate(currentDate.getDate() - 2);
-
-    // Event should be displayed if its end date is after the cutoff
-    return eventEndDate >= cutoffDate;
-  };
-
-  // Load events data with error handling
-  useEffect(() => {
-    const loadEventsData = async () => {
-      try {
-        // Use dynamic import to catch JSON parsing errors
-        const response = await fetch("/events.json");
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        setEventsData(data);
-        setEventsLoaded(true);
-      } catch (error) {
-        console.warn("Failed to load events data:", error);
-        // Set empty array as fallback
-        setEventsData([]);
-        setEventsLoaded(true);
-      }
-    };
-
-    loadEventsData();
-  }, []);
-
-  // Sort, filter and transform events
-  const processedEvents = eventsData
-    .filter(event => shouldDisplayEvent(event.date))
-    .sort((a, b) => getSortableDate(a.date).getTime() - getSortableDate(b.date).getTime())
+  // Process events using the new system
+  const processedEvents = events
+    .filter(shouldDisplayEvent)
+    .sort((a, b) => getEventSortDate(a).getTime() - getEventSortDate(b).getTime())
     .map(event => ({
       ...event,
-      date: transformDate(event.date),
+      date: formatEventDate(event.dateStart, event.dateEnd),
     }));
 
   const scrollToMap = useCallback(() => {
@@ -347,7 +184,7 @@ export default function Home() {
         </div>
 
         {/* Dynamic Events Section */}
-        {eventsLoaded && processedEvents.length > 0 && (
+        {processedEvents.length > 0 && (
           <div id="events-section" className="container mx-auto px-6 py-12 mb-16 flex flex-col items-center">
             <h2 className={`text-4xl font-bold mb-12 ${textColor}`}>Next events:</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
