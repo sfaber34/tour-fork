@@ -81,20 +81,16 @@ Please see [CONTRIBUTING.MD](https://github.com/scaffold-eth/scaffold-eth-2/blob
 
 ## Event Card Rendering
 
-The "Next events:" event cards are rendered from the info in packages/nextjs/public/events.json
+The "Next events:" event cards are rendered from the const events object in packages/nextjs/events.ts
 
-Events will not be rendered if the card is for an event more than 2 days old
-
-Each event requires a date, title, location, and description. Date format is MM/DD/YYYY:
+Each event requires a title, location, description, and dateStart. Date format is YYYY-MM-DD:
 ```
-[
-  {
-    "date": "09/29/2025",
-    "title": "A single day event",
-    "location": "Location 2",
-    "description": "We'll show off SpeedRun Ethereum and dive into vibe coding onchain apps and the art of one-shotting."
-  }
-]
+{
+  title: "A past single day event",
+  location: "Location 1",
+  description: "We'll show off SpeedRun Ethereum and dive into vibe coding onchain apps and the art of one-shotting.",
+  dateStart: "2025-09-10",
+}
 ```
 
 It will handle a range of days like this:

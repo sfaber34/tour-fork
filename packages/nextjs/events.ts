@@ -12,37 +12,17 @@ export type Event = {
 
 export const events: Event[] = [
   {
-    title: "A past event",
+    title: "A past single day event",
     location: "Location 1",
     description: "We'll show off SpeedRun Ethereum and dive into vibe coding onchain apps and the art of one-shotting.",
-    dateStart: "2025-09-11",
+    dateStart: "2025-09-10",
   },
   {
     title: "A past event with a range of days",
-    location: "Location 3",
+    location: "Location 2",
     description: "We'll show off SpeedRun Ethereum and dive into vibe coding onchain apps and the art of one-shotting.",
-    dateStart: "2025-09-01",
-    dateEnd: "2025-09-03",
-  },
-  {
-    title: "A past event with a rollover into the next month",
-    location: "Location 4",
-    description: "We'll show off SpeedRun Ethereum and dive into vibe coding onchain apps and the art of one-shotting.",
-    dateStart: "2025-08-25",
-    dateEnd: "2025-09-14",
-  },
-  {
-    title: "A future event",
-    location: "Prague",
-    description: "We'll show off SpeedRun Ethereum and dive into vibe coding onchain apps and the art of one-shotting.",
-    dateStart: "2025-12-15",
-  },
-  {
-    title: "Another future event with range",
-    location: "Berlin",
-    description: "Advanced Ethereum development workshop covering Layer 2 solutions and scaling.",
-    dateStart: "2025-12-20",
-    dateEnd: "2025-12-22",
+    dateStart: "2025-08-28",
+    dateEnd: "2025-09-01",
   },
 ];
 
@@ -106,6 +86,19 @@ export const getEventEndDate = (event: Event): Date => {
 };
 
 export const shouldDisplayEvent = (event: Event): boolean => {
+  // First check if the event has valid dates (dateEnd must be >= dateStart)
+  if (event.dateEnd) {
+    const [startYear, startMonth, startDay] = event.dateStart.split("-").map(Number);
+    const [endYear, endMonth, endDay] = event.dateEnd.split("-").map(Number);
+    const startDate = new Date(startYear, startMonth - 1, startDay);
+    const endDate = new Date(endYear, endMonth - 1, endDay);
+
+    // Don't display events where end date is before start date
+    if (endDate < startDate) {
+      return false;
+    }
+  }
+
   const eventEndDate = getEventEndDate(event);
   const currentDate = new Date();
 
