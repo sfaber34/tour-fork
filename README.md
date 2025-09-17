@@ -83,7 +83,9 @@ Please see [CONTRIBUTING.MD](https://github.com/scaffold-eth/scaffold-eth-2/blob
 
 The "Next events:" event cards are rendered from the const events object in packages/nextjs/events.ts
 
-Each event requires a title, location, description, and dateStart. Date format is YYYY-MM-DD:
+Each event requires a title, location, description, and dateStart. Date format is YYYY-MM-DD
+
+Here's an example single day event:
 ```
 {
   title: "A past single day event",
@@ -93,28 +95,17 @@ Each event requires a title, location, description, and dateStart. Date format i
 }
 ```
 
-It will handle a range of days like this:
+This is an example multi-day event with the optional dateEnd:
 ```
-[
-  {
-      "date": "09/28-29/2025",
-      "title": "An event with a range of days",
-      "location": "Location 3",
-      "description": "We'll show off SpeedRun Ethereum and dive into vibe coding onchain apps and the art of one-shotting."
-  }
-]
+{
+  title: "A past event with a range of days",
+  location: "Location 2",
+  description: "We'll show off SpeedRun Ethereum and dive into vibe coding onchain apps and the art of one-shotting.",
+  dateStart: "2025-08-28",
+  dateEnd: "2025-09-01",
+}
 ```
 
-And a date range that rolls into the next month (or year):
-```
-[
-  {
-    "date": "09/25/2025-10/15/2025",
-    "title": "An event with a rollover into the next month",
-    "location": "Location 4",
-    "description": "We'll show off SpeedRun Ethereum and dive into vibe coding onchain apps and the art of one-shotting."
-  }
-]
-```
+Rendered event cards are sorted by dateStart. They will not be rendered if an event is more than 2 days old, they are missing one of the required properties, or if a user accidentally enters a dateEnd that is before dateStart.
 
 
