@@ -4,7 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import EventCard from "../components/EventCard";
 import Marker from "../components/Markers";
-import { events, formatEventDate, getEventSortDate, shouldDisplayEvent } from "../events";
+import { events } from "../events";
+import { formatEventDate, getEventSortDate, shouldDisplayEvent } from "../utils/events-dates";
 
 export default function Home() {
   const [scrollY, setScrollY] = useState(0);
